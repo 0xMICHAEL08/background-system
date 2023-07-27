@@ -1,6 +1,7 @@
 "use client";
 /* antd组件库容器 */
 
+import React from "react";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 

@@ -1,10 +1,11 @@
-import AntdContainer from './_components/AntdContainer';
+import AntdContainer from "./_components/AntdContainer";
 
-
-const AdminLayout = ({children}:any) => {
+const AdminLayout = ({ children }: any) => {
   return (
-    <AntdContainer>{children}</AntdContainer>
+    <div className="admin-main">
+      <AntdContainer>{children}</AntdContainer>
+    </div>
   );
-}
+};
 
 export default AdminLayout;
