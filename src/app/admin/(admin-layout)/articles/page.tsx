@@ -1,6 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Form, Button, Table, Input, Card, Modal, Space } from "antd";
+import {
+  Form,
+  Button,
+  Table,
+  Input,
+  Card,
+  Modal,
+  Space,
+  Popconfirm,
+} from "antd";
 import {
   SearchOutlined,
   PlusOutlined,
@@ -8,21 +17,32 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 
+interface Article {
+  id: string;
+  title: string;
+  desc: string;
+}
+
 const UsersPage = () => {
   const [open, setOpen] = useState(false); // 控制modal显示隐藏
   const [myForm] = Form.useForm(); // 获取Form组件实例
-  const [list, setList] = useState([]);
+  const [list, setList] = useState<Article[]>([]);
   const [query, setQuery] = useState({});
+  const [currentId, setCurrentId] = useState(""); // 区分当前modal为新增/修改，存在表示修改，不存在表示新增
 
   // 监听查询条件的改变
   useEffect(() => {
     fetch("/api/admin/articles")
       .then((res) => res.json())
       .then((res) => {
-        console.log(res);
         setList(res.data.list);
       });
   }, [query]);
+
+  // 清除当前选中的id
+  useEffect(() => {
+    if (!open) setCurrentId("");
+  }, [open]);
 
   return (
     <Card
@@ -55,7 +75,7 @@ const UsersPage = () => {
           {
             title: "序号",
             render(v, r, i) {
-              // 当前行的值（v）、当前行数据（r）和行索引（i）
+              // 当前单元格的数据（v）、当前行的数据（r）和行索引（i）
               return i + 1;
             },
           },
@@ -69,16 +89,35 @@ const UsersPage = () => {
           },
           {
             title: "操作",
-            render() {
+            render(v, r) {
               return (
                 <Space>
-                  <Button size="small" icon={<EditOutlined />} type="primary" />
                   <Button
                     size="small"
-                    icon={<DeleteOutlined />}
+                    icon={<EditOutlined />}
                     type="primary"
-                    danger
+                    onClick={() => {
+                      setOpen(true);
+                      setCurrentId(r.id); // 将currentId设置为当前行id，表示将要修改
+                      myForm.setFieldsValue(r); // 填充当前整行的数据
+                    }}
                   />
+                  <Popconfirm
+                    title="是否确认删除？"
+                    onConfirm={async () => {
+                      await fetch("/api/admin/articles/" + r.id, {
+                        method: "DELETE",
+                      }).then((res) => res.json());
+                      setQuery({});
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      icon={<DeleteOutlined />}
+                      type="primary"
+                      danger
+                    />
+                  </Popconfirm>
                 </Space>
               );
             },
@@ -96,15 +135,27 @@ const UsersPage = () => {
         onOk={() => {
           myForm.submit();
         }}
+        destroyOnClose={true} // 关闭窗口后销毁
+        maskClosable={false} // 点击空白处不关闭
       >
         <Form
+          preserve={false} // 与destroyOnClose结合使用，否则不会销毁
           layout="vertical"
           form={myForm}
           onFinish={async (v) => {
-            await fetch("/api/admin/articles", {
-              method: "POST",
-              body: JSON.stringify(v),
-            }).then((res) => res.json());
+            if (currentId) {
+              // 修改
+              await fetch("/api/admin/articles/" + currentId, {
+                body: JSON.stringify(v),
+                method: "PUT",
+              }).then((res) => res.json());
+            } else {
+              // 新增
+              await fetch("/api/admin/articles", {
+                body: JSON.stringify(v),
+                method: "POST",
+              }).then((res) => res.json());
+            }
             setOpen(false);
             setQuery({}); // 改变query会重新取数据
           }}
