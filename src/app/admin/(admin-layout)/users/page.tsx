@@ -1,12 +1,10 @@
 "use client";
 import React from "react";
-import { Form, Button, Table, Input } from "antd";
+import { Form, Button, Table, Input, Card } from "antd";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import PageContainer from "../../_components/PageContainer";
-
 const UsersPage = () => {
   return (
-    <PageContainer
+    <Card
       title="用户信息"
       extra={
         <>
@@ -54,7 +52,7 @@ const UsersPage = () => {
           },
         ]}
       />
-    </PageContainer>
+    </Card>
   );
 };
 
